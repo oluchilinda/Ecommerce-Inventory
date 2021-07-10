@@ -29,6 +29,7 @@ class BaseModel(db.Model):
 
 
 class Category(BaseModel):
+    __tablename__= 'category'
 
     name = db.Column(db.String())
     slug = db.Column(db.String())
@@ -39,6 +40,7 @@ class Category(BaseModel):
 
 
 class Product(BaseModel):
+    __tablename__='product'
 
     name = db.Column(db.String())
     slug = db.Column(db.String())
@@ -47,13 +49,15 @@ class Product(BaseModel):
     price = db.Column(db.Float())
     available = db.Column(db.Boolean())
     category_id = db.Column(db.Integer(), db.ForeignKey('category.id'))
-
+    order = db.relationship('OrderItem', backref='product')
+   
     def __str__(self):
         return self.name
 
     @property
     def serialize(self):
         return {
+            'id': self.id,
             'name': self.name,
             'slug': self.slug,
             'image_path': self.image_path,
@@ -62,3 +66,31 @@ class Product(BaseModel):
             'available': self.available,
 
         }
+
+
+class Order(BaseModel):
+    __tablename__= 'order'
+    first_name = db.Column(db.String())
+    last_name = db.Column(db.String())
+    email = db.Column(db.String())
+    address = db.Column(db.String())
+    postal_code = db.Column(db.String())
+    city = db.Column(db.String())
+    paid = db.Column(db.Boolean(), default=False)
+    order = db.relationship("OrderItem", backref='order')
+    
+    def __str__(self):
+        return f'Order {self.id}'
+
+
+
+class OrderItem(BaseModel):
+    __tablename__= 'order_item'
+    order_id = db.Column(db.Integer, db.ForeignKey('order.id'), nullable=False)
+    product_id = db.Column(db.Integer, db.ForeignKey(
+        'product.id'), nullable=False)
+    price = db.Column(db.Float())
+    quantity = db.Column(db.Integer())
+
+    def __str__(self):
+        return str(self.id)

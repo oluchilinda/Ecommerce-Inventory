@@ -5,12 +5,12 @@ import os
 from flask import (Blueprint, flash, jsonify, redirect, request)
 
 from werkzeug.utils import secure_filename
-from .models import Category, Product
+from ..models import Category, Product
 from slugify import slugify
-from . import db
+from .. import db
 from os.path import join, dirname, realpath
 
-main = Blueprint('main', __name__)
+product_main = Blueprint('product_main', __name__)
 
 
 UPLOAD_FOLDER = join(dirname(realpath(__file__)), 'uploads')
@@ -22,8 +22,8 @@ def allowed_file(filename):
            filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 
-@main.route("/category", methods=["POST"])
-def category():
+@product_main.route("/category", methods=["POST"])
+def add_category():
     name = request.values["name"]
     category_data = Category.query.filter_by(name=name).first()
     if category_data:
@@ -31,12 +31,13 @@ def category():
     else:
         category_slug = slugify(name, to_lower=True)
         category = Category(name=name, slug=category_slug)
-        category.save()
+        db.session.add(category)
+        db.session.commit()
         return jsonify({"msg": "category created"}), 201
 
 
-@main.route("/product", methods=["POST","GET"])
-def image():
+@product_main.route("/product", methods=["POST","GET"])
+def add_product():
     if request.method == 'POST':
 
         category = request.values["category"]
@@ -74,8 +75,14 @@ def image():
 
             return {"data": data}, 200
         return {"msg": "no products available"}, 400
+    
+    
+@product_main.route("/product/<int:id>/<slug>", methods=["GET"])
+def single_product_details(id, slug):
+    product = Product.query.filter_by(id=id, slug=slug).first()
+    return jsonify(product.serialize)
 
 
-# @main.route('/uploads/<name>')
+# @product_main.route('/uploads/<name>')
 # def download_file(name):
 #     return send_from_directory(UPLOAD_FOLDER, name)

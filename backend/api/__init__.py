@@ -24,8 +24,14 @@ def create_app(config_name):
     db.init_app(app)
     Migrate(app, db)
     jwt = JWTManager(app)
+    
+    from .views.customer_orders import order_main
+    app.register_blueprint(order_main)
 
-    from .products_views import main as product_blueprint
-    app.register_blueprint(product_blueprint)
+    from .views.products_views import product_main 
+    app.register_blueprint(product_main)
+    
+    from .views.cart_views import cart_main 
+    app.register_blueprint(cart_main)
 
     return app
